@@ -25,6 +25,8 @@ struct SongView: View {
     @State private var revealedLines = 0
     @State private var fontSize: CGFloat = 17
     @State private var keepAwake = false
+    @State private var showingTranspose = false
+    @State private var showingVersions = false
 
     private var versions: [SongVersion] { song.sortedVersions }
 
@@ -39,10 +41,21 @@ struct SongView: View {
                 showChords: showChords,
                 repeatChorus: repeatChorus,
                 revealedLines: revealMode ? revealedLines : nil,
-                fontSize: fontSize
+                fontSize: fontSize,
+                transposeSemitones: activeVersion?.transpose ?? 0
             ),
             onTap: advanceReveal
         )
+    }
+
+    /// The key this version actually sounds in, once its transpose offset is
+    /// applied. Nil for a version with no chords.
+    private var soundingKey: String? {
+        guard let version = activeVersion,
+              let key = Transposer.detectKey(version.lyrics)
+        else { return nil }
+        let moved = key + version.transpose
+        return Transposer.noteName(moved, preferFlats: Transposer.prefersFlats(key: moved))
     }
 
     var body: some View {
@@ -85,11 +98,36 @@ struct SongView: View {
                         )
                     }
                     Divider()
+                    Button {
+                        showingTranspose = true
+                    } label: {
+                        Label("Change key…", systemImage: "music.quarternote.3")
+                    }
+                    .disabled(!(activeVersion.map { Transposer.detectKey($0.lyrics) != nil } ?? false))
+
+                    Button {
+                        showingVersions = true
+                    } label: {
+                        Label("Versions…", systemImage: "square.stack")
+                    }
+                    Divider()
                     Toggle("Keep screen awake", isOn: $keepAwake)
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
             }
+        }
+        .sheet(isPresented: $showingTranspose) {
+            if let version = activeVersion {
+                // Switch straight to the new version on save — you asked to see
+                // the song in another key, so show it in that key.
+                TransposeSheet(song: song, version: version) { created in
+                    selectedVersionID = created.persistentModelID
+                }
+            }
+        }
+        .sheet(isPresented: $showingVersions) {
+            VersionManagerView(song: song)
         }
         .onAppear {
             if selectedVersionID == nil {
@@ -129,6 +167,15 @@ struct SongView: View {
                 }
                 if let version = activeVersion {
                     Text(version.languageName).font(.caption).foregroundStyle(.secondary)
+                }
+                if let soundingKey {
+                    Text(soundingKey)
+                        .font(.caption.monospaced())
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 1)
+                        .background(Theme.chordColour.opacity(0.12), in: Capsule())
+                        .foregroundStyle(Theme.chordColour)
+                        .accessibilityLabel("Key of \(soundingKey)")
                 }
             }
         }

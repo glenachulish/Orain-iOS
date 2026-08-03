@@ -1,6 +1,6 @@
 # Òrain for iOS — Project Scope
 
-*Version 1 — written 2026-07-29. This is the **stable design reference** for
+*Version 2 — last updated 2026-08-03. This is the **stable design reference** for
 the iOS app: what it is, why it is shaped the way it is, and the decisions
 that are now settled. It changes only when a genuine design decision changes
 — same convention as `orain-project-notes.md` for the Pi app.*
@@ -18,7 +18,7 @@ chord-over-lyric display, and the same three mastery axes as the web app
 running on the Pi.
 
 **The Pi version is untouched.** It keeps running at
-its Tailscale Funnel address, keeps its own repo
+`https://ceol-pi.tail01672f.ts.net/orain/`, keeps its own repo
 (`glenachulish/Orain`), keeps its own notes. Nothing in this project modifies
 it. The only connection between them is a one-directional export file — songs
 travel Pi → phone, and nothing travels back automatically.
@@ -175,6 +175,91 @@ Notes on the parts that are easy to get wrong:
 
 ---
 
+## 5a. Transposition and version management
+
+**Decided 2026-08-03.** A singer who cannot reach the top note of a song in G
+wants it in C, and wants to keep both. That is the feature.
+
+### What the user does
+
+Tap a chord — say the `G` — and choose what it should become. Every other
+chord in the version moves by the same interval, so `G C D` becomes
+`C F G`. The result is saved as a **new version**, named for what it is, and
+takes its place alongside the original. Versions can be renamed, deleted, and
+one of them chosen as the default that opens with the song.
+
+### How it is stored — an offset, not rewritten text
+
+`song_versions.transpose` already exists on the Pi and has always been an
+integer. It stays that way: **the lyrics text is never rewritten.** A
+transposed version stores the same ChordPro source with `transpose = 5`, and
+the renderer shifts the chord names on the way to the screen.
+
+The alternative — rewriting every `[G]` to `[C]` in the stored text — was
+rejected for three reasons. It is lossy: once written, there is no way back to
+the original spelling if the transposition rule made a poor enharmonic choice.
+It breaks the round-trip guarantee, because a load-then-save would no longer
+reproduce what was stored. And it would make a lyric typo fixed in one version
+need fixing again in every transposed copy.
+
+The cost is that the two-line editor has to show *something* — either the
+stored chords or the transposed ones. It shows the transposed ones, matching
+what the song page displays, and converts back on save. That conversion is
+exactly the kind of thing the golden-fixture approach exists to check.
+
+### The rules that need deciding, not guessing
+
+- **Only the root and the bass note move.** `Am7` → `Dm7`; `D/F#` → `G/B`.
+  The suffix is carried across untouched.
+- **Sharps or flats is decided by the target key**, not by the source. Going
+  up a tone from `G` gives `A` (a sharp key, so `F#` not `Gb`); going to `Eb`
+  gives flats throughout. Following the source spelling mechanically produces
+  things like `A#` where any musician would write `Bb`.
+- **Anything unrecognised is left alone** rather than mangled. A `[N.C.]` or a
+  scribbled `[riff]` passes through untouched.
+- **Transposition is not applied to lyrics**, obviously, but also not to
+  section labels — a chorus labelled "Sèist in G" keeps its name, and renaming
+  it is the user's business.
+
+### Version management, made real
+
+The Pi has the version machinery but the iOS app has only shown it so far.
+Phase 2 makes it editable:
+
+- **Rename** a version — its label ("Up a 4th", "English singing translation")
+  and its title, if it is sung under a different name.
+- **Delete** a version, behind a confirmation. Deleting the last version of a
+  song leaves the song, not an orphan.
+- **Choose the default** — the canonical version, the one that opens with the
+  song. Exactly one per song, enforced in code as it already is.
+
+---
+
+## 5b. Seed content, and a copyright line that matters
+
+**Decided 2026-08-03.** If the app ships, it ships with a handful of songs so
+a new user can see what it does with an otherwise empty library.
+
+Those seed songs must be **traditional or otherwise out of copyright** —
+Gàidhlig trad is ideal, being both the point of the app and safely public
+domain. A seed library is not the same thing as a personal library, and the
+distinction is worth stating plainly:
+
+**Callum's own 120-song library must not ship with the app.** It contains
+lyrics to U2, Tracy Chapman, The Beatles and others. Keeping those on his own
+phone for his own singing is ordinary personal use. Distributing them inside
+an App Store binary is publishing someone else's lyrics, which is a different
+thing entirely and would be a real problem — not a technicality.
+
+The architecture already keeps these apart, and should stay that way:
+
+- The seed is a small bundled archive file, imported on first run.
+- Everything else arrives by the user importing or typing it, and stays on
+  their device. The app has no server, sends nothing anywhere, and so never
+  becomes a distributor of anything a user enters.
+
+---
+
 ## 6. How correctness is checked without a compiler in the room
 
 The ChordPro engine is the risky part of the whole project: it is fiddly, it
@@ -239,9 +324,13 @@ chords over lyrics; switch versions; set rating / favourite / hitlist; reveal
 mode, repeat-chorus, text size, keep-screen-awake. No editing yet. This alone
 replaces most of what the phone is used for.
 
-**Phase 2 — Editing.** Add and edit songs and versions; the two-line chord
-editor with live preview; delete behind a confirmation; "edit in place" vs
-"keep both versions" as two distinct actions.
+**Phase 2 — Editing, transposition and version management.** Add and edit songs
+and versions; the two-line chord editor with live preview; **transpose a
+version into a new key and keep both** (§5a); rename, delete and choose the
+default version; "edit in place" vs "keep both versions" as two distinct
+actions. This is the phase that turns a reader into an instrument, and it is
+also the phase that becomes mandatory the moment anyone but Callum uses the
+app — a stranger with an empty library needs to be able to put something in it.
 
 **Phase 3 — Make it feel like an iOS app rather than a port.** Share sheet
 (lyrics as text, song as a file), Dynamic Type throughout, VoiceOver on the
@@ -291,22 +380,37 @@ Their absence is a feature.
 
 ---
 
-## 10. Open decisions — for Callum
+## 10. Decisions settled 2026-08-03
 
-1. **Native Swift is assumed, not agreed.** §3 makes the case; the work so far
-   is the ChordPro engine, the archive format and a Phase-1 scaffold. If you
-   would rather go the Capacitor route, the golden fixtures and the export
-   script both still apply — only the Swift files are wasted.
-2. **One app or two?** Should this eventually *replace* the Pi version for
-   your own use, or live alongside it permanently? It changes how much Phase 6
-   matters.
-3. **Does anyone else get it?** If the App Store aim is real, the app has to
-   make sense to someone starting with an empty library — which mostly means
-   Phase 2 (editing) is not optional, and an in-app way to get started matters.
-4. **Name and icon.** Both needed before submission, neither needed before
-   Phase 3.
-5. **Where does the code live?** A new private repo (`glenachulish/Orain-iOS`)
-   is the obvious answer, keeping the Pi repo untouched.
+1. **Native Swift.** Settled by the compiler: it built and ran the same day it
+   was first opened in Xcode. Capacitor is no longer under consideration.
+2. **Both apps run.** The App Store is the aim, and the Apple Developer
+   membership will be paid for when the app is worth putting on it — **not
+   before**. Until then the app installs to Callum's own phone from Xcode,
+   re-signed every seven days. **The Pi keeps running throughout**, and stays
+   the everyday library. Nothing about the iOS app requires retiring it, and
+   deciding that now would be deciding it too early. Phase 6 (Pi sync)
+   therefore stays genuinely optional rather than becoming load-bearing.
+3. **Other people, eventually.** If it ships, it ships with a few
+   copyright-free songs so an empty library isn't a dead end. That makes
+   Phase 2 (editing) mandatory rather than a nicety — see §5b for the line
+   between seed content and Callum's own library, which matters more than it
+   might first appear.
+4. **Transposition is in, and specified.** See §5a. Chord transposition,
+   saved as a new named version, with rename / delete / choose-default
+   alongside it. The `transpose` column stays and finally gets used.
+5. **Repo stays public for now.** Nothing sensitive is in it. **Make it
+   private before App Store submission** — at that point the repo stops being
+   a hobby project in the open and starts being the source of a shipping
+   binary, and there is no reason to hand anyone the pre-release. Also revisit
+   if Phase 6 is ever built, since that introduces server addresses and
+   credentials handling.
+
+Still open, and not urgent:
+
+- **Name and icon.** Both needed before submission, neither before Phase 3.
+  Worth checking whether an app called "Òrain" already exists before getting
+  attached to it.
 
 ---
 

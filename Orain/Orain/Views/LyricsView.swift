@@ -96,6 +96,9 @@ struct LyricDisplayOptions {
     /// lines revealed so far.
     var revealedLines: Int?
     var fontSize: CGFloat = 17
+    /// Semitones to shift the chords by on the way to the screen. The stored
+    /// lyrics are never rewritten — see OrainCore's Transpose.swift.
+    var transposeSemitones: Int = 0
 }
 
 // MARK: - The view
@@ -106,9 +109,18 @@ struct LyricsView: View {
     /// Called when the reader taps the lyrics — used to advance reveal mode.
     var onTap: () -> Void = {}
 
+    /// The text actually rendered: the stored lyrics, transposed if the
+    /// version calls for it, with the chorus repeated if the reader asked.
+    ///
+    /// Transposition happens first. It only ever rewrites what is inside the
+    /// square brackets, so the section directives the chorus repeat depends on
+    /// survive it untouched.
     private var effectiveLyrics: String {
-        let base = lyrics ?? ""
-        return options.repeatChorus ? ChordPro.repeatChorus(base) : base
+        var text = lyrics ?? ""
+        if options.transposeSemitones != 0 {
+            text = Transposer.transposeLyrics(text, by: options.transposeSemitones)
+        }
+        return options.repeatChorus ? ChordPro.repeatChorus(text) : text
     }
 
     private var sections: [LyricSection] {
