@@ -43,6 +43,16 @@ final class Song {
     @Relationship(deleteRule: .cascade, inverse: \SongVersion.song)
     var versions: [SongVersion] = []
 
+    /// The songbooks this song appears in. Deleting the song removes it from
+    /// them; deleting one of them does nothing to the song.
+    @Relationship(inverse: \SongCollection.songs)
+    var collections: [SongCollection] = []
+
+    /// User-invented labels — anything the built-in language and tradition
+    /// axes don't cover.
+    @Relationship(inverse: \SongTag.songs)
+    var tags: [SongTag] = []
+
     init(
         slug: String,
         title: String,
@@ -100,6 +110,79 @@ extension Song {
         }
         updatedAt = .now
     }
+
+    /// Pull another song's versions into this one and remove it.
+    ///
+    /// For when the same song ended up in the library twice — a bulk import
+    /// that produced "It Ain'T Necessarily So" and "It Ain'T Necessarily So 2",
+    /// or a Gàidhlig song entered separately from its English singing
+    /// translation before anyone realised they were the same song.
+    ///
+    /// What it keeps, and why:
+    ///
+    /// - **Every version survives.** They move across rather than being
+    ///   copied, so nothing is duplicated and nothing is lost.
+    /// - **The absorbed song's title is not thrown away.** It becomes the
+    ///   version's label, so a merged version still says where it came from
+    ///   instead of appearing as an anonymous second copy.
+    /// - **Progress is kept at its highest.** If either song was a favourite,
+    ///   the result is; the rating is the better of the two. Merging should
+    ///   never quietly demote work you have already done.
+    /// - **Tags and collections are unioned**, because both were deliberate
+    ///   acts of filing and neither is more correct than the other.
+    /// - **This song's canonical version stays canonical.** The incoming ones
+    ///   arrive as alternatives.
+    func absorb(_ other: Song) {
+        let incoming = other.sortedVersions
+
+        for version in incoming {
+            version.isCanonical = false
+
+            // Keep a trace of where it came from, if it has no name of its own.
+            if (version.versionLabel ?? "").isEmpty, other.title != title {
+                version.versionLabel = other.title
+            }
+
+            version.song = self
+            if !versions.contains(where: { $0.persistentModelID == version.persistentModelID }) {
+                versions.append(version)
+            }
+        }
+        other.versions.removeAll()
+
+        // Filing is additive: being in either song's collections means being
+        // in the merged song's.
+        for collection in other.collections where !collection.contains(self) {
+            collection.songs.append(self)
+        }
+        for tag in other.tags where !tag.contains(self) {
+            tag.songs.append(self)
+        }
+
+        // Progress takes the better of the two.
+        isFavourite = isFavourite || other.isFavourite
+        onHitlist = onHitlist || other.onHitlist
+        if let theirs = other.rating {
+            rating = max(rating ?? 0, theirs)
+        }
+        if composer == nil || composer?.isEmpty == true { composer = other.composer }
+        if tradition == nil { tradition = other.tradition }
+
+        // Notes are joined rather than overwritten — losing a note during a
+        // merge would be a nasty surprise.
+        let mine = (notes ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let theirs = (other.notes ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !theirs.isEmpty, mine != theirs {
+            notes = mine.isEmpty ? theirs : mine + "\n\n" + theirs
+        }
+
+        // Repair the one-canonical rule if this song somehow had none.
+        if !versions.contains(where: \.isCanonical), let first = sortedVersions.first {
+            makeCanonical(first)
+        }
+
+        updatedAt = .now
+    }
 }
 
 // Lets OrainCore's filtering run directly against the stored objects without
@@ -108,10 +191,11 @@ extension Song: FilterableSong {
     var canonicalLanguage: String? { canonicalVersion?.language }
 
     var searchableText: String {
-        versions
-            .compactMap { $0.lyrics }
+        (versions.compactMap { $0.lyrics } + tags.map(\.name))
             .joined(separator: "\n")
     }
+
+    var tagNames: [String] { tags.map(\.name) }
 }
 
 @Model

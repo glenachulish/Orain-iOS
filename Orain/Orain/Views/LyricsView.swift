@@ -87,6 +87,16 @@ struct FlowLayout: Layout {
     }
 }
 
+// MARK: - Line identity
+
+/// Every rendered line carries one of these so the song page can scroll to it.
+/// Blank lines get one too, which keeps the indices contiguous — auto-scroll
+/// advancing "one line" then moves at a steady rate through the verse gaps
+/// rather than skipping them.
+struct LyricLineID: Hashable {
+    let index: Int
+}
+
 // MARK: - Display options
 
 struct LyricDisplayOptions {
@@ -231,12 +241,13 @@ struct LyricsView: View {
     @ViewBuilder
     private func lineView(_ line: String, absoluteIndex: Int) -> some View {
         if line.trimmingCharacters(in: .whitespaces).isEmpty {
-            Color.clear.frame(height: options.fontSize * 0.6)
+            Color.clear
+                .frame(height: options.fontSize * 0.6)
+                .id(LyricLineID(index: absoluteIndex))
         } else {
-            let segments = ChordPro.parseChordProLine(line)
             FlowLayout(lineSpacing: options.showChords ? 6 : 2) {
-                ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
-                    segmentView(segment)
+                ForEach(Array(cells(for: line).enumerated()), id: \.offset) { _, cell in
+                    cellView(cell)
                 }
             }
             .opacity(isRevealed(absoluteIndex) ? 1 : 0)
@@ -244,17 +255,73 @@ struct LyricsView: View {
             // reflows as lines appear — the same reason the web version uses
             // `visibility` instead of `display`.
             .animation(.easeOut(duration: 0.15), value: options.revealedLines)
+            .id(LyricLineID(index: absoluteIndex))
         }
     }
 
-    private func segmentView(_ segment: ChordSegment) -> some View {
+    /// One chord sitting over one run of text, as drawn.
+    private struct Cell {
+        let chord: String?
+        let text: String
+    }
+
+    /// Break a line into the smallest pieces that can wrap independently.
+    ///
+    /// This is the fix for lyrics running off the edge of the screen. A
+    /// segment between two chords can be a dozen words long, and drawn as one
+    /// view it cannot break — so a line with few chord changes ran straight
+    /// past the margin. Splitting at spaces lets the flow layout wrap where a
+    /// reader would, while the chord stays welded to the word it belongs to,
+    /// because it travels with the first piece of its segment.
+    private func cells(for line: String) -> [Cell] {
+        var out: [Cell] = []
+
+        for segment in ChordPro.parseChordProLine(line) {
+            let words = splitKeepingSpaces(segment.text)
+
+            if words.isEmpty {
+                out.append(Cell(chord: segment.chord, text: segment.text))
+                continue
+            }
+
+            for (index, word) in words.enumerated() {
+                // Only the first piece carries the chord; the rest are plain
+                // text that may wrap anywhere.
+                out.append(Cell(chord: index == 0 ? segment.chord : nil, text: word))
+            }
+        }
+
+        return out
+    }
+
+    /// Split on spaces, keeping each space attached to the word before it so
+    /// the spacing between words is preserved when they end up on one row.
+    private func splitKeepingSpaces(_ text: String) -> [String] {
+        guard !text.isEmpty else { return [] }
+
+        var pieces: [String] = []
+        var current = ""
+
+        for character in text {
+            current.append(character)
+            if character == " " {
+                pieces.append(current)
+                current = ""
+            }
+        }
+        if !current.isEmpty { pieces.append(current) }
+
+        return pieces
+    }
+
+    private func cellView(_ cell: Cell) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if options.showChords {
-                Text(segment.chord ?? " ")
+                Text(cell.chord ?? " ")
                     .font(.system(size: options.fontSize * 0.8, weight: .semibold, design: .monospaced))
                     .foregroundStyle(Theme.chordColour)
             }
-            Text(segment.text.isEmpty ? "\u{00a0}" : segment.text)
+            Text(cell.text.isEmpty ? "\u{00a0}" : cell.text)
                 .font(.system(size: options.fontSize))
         }
         .fixedSize()
@@ -279,6 +346,11 @@ struct LyricsView: View {
             }
         }
         return nil
+    }
+
+    /// Every line including the blank ones — the range auto-scroll walks.
+    var totalLineCount: Int {
+        sections.reduce(0) { $0 + $1.lines.count }
     }
 
     /// Total number of real lyric lines — the denominator of the reveal counter.

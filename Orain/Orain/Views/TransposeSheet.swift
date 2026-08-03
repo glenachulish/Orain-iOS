@@ -29,14 +29,42 @@ struct TransposeSheet: View {
     @State private var chosen: Transposer.Target?
     @State private var label: String = ""
 
+    /// The lyrics **as they appear on screen** — the stored text with this
+    /// version's existing offset already applied.
+    ///
+    /// Everything in this sheet works from these rather than from
+    /// `version.lyrics`, and that is not a detail. A version transposed to Am
+    /// still stores Em; reading the stored text would offer to change a chord
+    /// the singer cannot see, and adding the new interval to the old one gave
+    /// a key nobody asked for. The sheet must speak about what is on the page.
+    private var soundingLyrics: String {
+        Transposer.transposeLyrics(version.lyrics, by: version.transpose)
+    }
+
+    private var soundingKey: Int {
+        Transposer.detectKey(soundingLyrics) ?? 0
+    }
+
     private var chords: [String] {
-        Transposer.chordSymbols(in: version.lyrics)
+        Transposer.chordSymbols(in: soundingLyrics)
             .filter { Transposer.parseChord($0) != nil }
     }
 
     private var targets: [Transposer.Target] {
         guard let selectedChord else { return [] }
-        return Transposer.targets(forChord: selectedChord, in: version.lyrics)
+        return Transposer.targets(forChord: selectedChord, in: soundingLyrics)
+    }
+
+    /// A version that would end up in the same key as the one being made.
+    /// Offering to make a duplicate is worse than saying one already exists.
+    private var existingVersionInTargetKey: SongVersion? {
+        guard semitones != 0 else { return nil }
+        let resulting = normalise(version.transpose + semitones)
+        return song.versions.first {
+            $0.persistentModelID != version.persistentModelID
+                && $0.lyrics == version.lyrics
+                && normalise($0.transpose) == resulting
+        }
     }
 
     /// The interval currently chosen, relative to what is already on screen.
@@ -80,9 +108,11 @@ struct TransposeSheet: View {
                 chordRow
             }
 
-            if selectedChord != nil {
-                Section("Make it…") {
-                    targetRow
+            if let selectedChord {
+                Section {
+                    targetRows
+                } header: {
+                    Text("Make \(selectedChord) into…")
                 }
             }
 
@@ -96,8 +126,19 @@ struct TransposeSheet: View {
                     previewList
                 }
 
+                if let existing = existingVersionInTargetKey {
+                    Section {
+                        Label(
+                            "You already have a version in this key\(existing.versionLabel.map { " — “\($0)”" } ?? ""). Saving will add another.",
+                            systemImage: "exclamationmark.triangle"
+                        )
+                        .font(.footnote)
+                        .foregroundStyle(.orange)
+                    }
+                }
+
                 Section {
-                    Text("The original version is kept. This adds a second one in the new key — the words are shared, so a correction to either fixes both.")
+                    Text("The original version is kept. This adds a second one in the new key, which you'll find under ⋯ → Versions. The words are shared, so a correction to either fixes both.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -105,69 +146,78 @@ struct TransposeSheet: View {
         }
     }
 
+    /// A wrapping row of chips rather than a horizontal scroller: every chord
+    /// in the song is visible without anyone having to guess that the row
+    /// slides sideways.
     private var chordRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(chords, id: \.self) { chord in
-                    Button {
-                        selectedChord = chord
-                        chosen = nil
-                        label = ""
-                    } label: {
-                        Text(chord)
-                            .font(.body.monospaced())
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                selectedChord == chord
-                                    ? Theme.chordColour.opacity(0.15)
-                                    : Color.secondary.opacity(0.1),
-                                in: Capsule()
-                            )
-                            .foregroundStyle(
-                                selectedChord == chord ? Theme.chordColour : Color.primary
-                            )
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.vertical, 2)
-        }
-    }
-
-    private var targetRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(targets) { target in
-                    Button {
-                        chosen = target.semitones == 0 ? nil : target
-                        label = target.semitones == 0
-                            ? ""
-                            : Transposer.suggestedLabel(
-                                forKey: Transposer.detectKey(version.lyrics) ?? 0,
-                                semitones: target.semitones
-                              )
-                    } label: {
-                        VStack(spacing: 2) {
-                            Text(target.label)
-                                .font(.body.monospaced())
-                            Text(target.semitones == 0 ? "as is" : "key of \(target.resultingKey)")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
+        FlowLayout(lineSpacing: 8) {
+            ForEach(chords, id: \.self) { chord in
+                Button {
+                    selectedChord = chord
+                    chosen = nil
+                    label = ""
+                } label: {
+                    Text(chord)
+                        .font(.body.monospaced())
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
+                        .padding(.trailing, 4)
                         .background(
-                            chosen?.semitones == target.semitones
+                            selectedChord == chord
                                 ? Theme.chordColour.opacity(0.15)
                                 : Color.secondary.opacity(0.1),
-                            in: RoundedRectangle(cornerRadius: 10)
+                            in: Capsule()
                         )
-                    }
-                    .buttonStyle(.plain)
+                        .foregroundStyle(
+                            selectedChord == chord ? Theme.chordColour : Color.primary
+                        )
                 }
+                .buttonStyle(.plain)
+                .padding(.trailing, 6)
             }
-            .padding(.vertical, 2)
+        }
+        .padding(.vertical, 2)
+    }
+
+    /// All twelve destinations, listed. The first version of this was a
+    /// horizontal scroller and you could only see three of them, which made a
+    /// complete list look like a broken one.
+    @ViewBuilder
+    private var targetRows: some View {
+        ForEach(targets) { target in
+            Button {
+                chosen = target.semitones == 0 ? nil : target
+                label = target.semitones == 0
+                    ? ""
+                    : Transposer.suggestedLabel(
+                        forKey: soundingKey,
+                        semitones: target.semitones
+                      )
+            } label: {
+                HStack(spacing: 10) {
+                    Text(target.label)
+                        .font(.body.monospaced())
+                        .foregroundStyle(
+                            target.semitones == 0 ? Color.secondary : Theme.chordColour
+                        )
+                        .frame(minWidth: 52, alignment: .leading)
+
+                    Text(target.semitones == 0
+                         ? "leave it as it is"
+                         : "the song moves to \(target.resultingKey)")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+
+                    Spacer()
+
+                    if chosen?.semitones == target.semitones {
+                        Image(systemName: "checkmark")
+                            .foregroundStyle(Theme.chordColour)
+                    }
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -197,8 +247,7 @@ struct TransposeSheet: View {
     }
 
     private func movedChord(_ chord: String) -> String {
-        let key = Transposer.detectKey(version.lyrics) ?? 0
-        let flats = Transposer.prefersFlats(key: key + semitones)
+        let flats = Transposer.prefersFlats(key: soundingKey + semitones)
         return Transposer.transposeChordSymbol(chord, by: semitones, preferFlats: flats)
     }
 

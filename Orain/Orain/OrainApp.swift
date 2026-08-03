@@ -13,8 +13,14 @@ import SwiftData
 struct OrainApp: App {
     var body: some Scene {
         WindowGroup {
-            LibraryView()
+            RootView()
         }
-        .modelContainer(for: [Song.self, SongVersion.self, MediaLink.self])
+        .modelContainer(for: [
+            Song.self,
+            SongVersion.self,
+            MediaLink.self,
+            SongCollection.self,
+            SongTag.self,
+        ])
     }
 }

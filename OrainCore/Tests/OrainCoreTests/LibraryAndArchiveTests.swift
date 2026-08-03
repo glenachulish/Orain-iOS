@@ -17,6 +17,7 @@ private struct TestSong: FilterableSong {
     var onHitlist: Bool = false
     var rating: Int? = nil
     var searchableText: String = ""
+    var tagNames: [String] = []
 }
 
 final class SongSortingTests: XCTestCase {
@@ -136,6 +137,73 @@ final class LibraryFilteringTests: XCTestCase {
         XCTAssertFalse(f.isActive)
         f.hitlistOnly = true
         XCTAssertTrue(f.isActive)
+    }
+
+    func testTagsAlsoCountAsAnActiveFilter() {
+        var f = LibraryFilter()
+        f.tagNames = ["wedding"]
+        XCTAssertTrue(f.isActive)
+    }
+}
+
+final class TagFilteringTests: XCTestCase {
+
+    private let songs: [TestSong] = [
+        TestSong(title: "Both", canonicalLanguage: "gd", tagNames: ["wedding", "slow air"]),
+        TestSong(title: "Wedding only", canonicalLanguage: "en", tagNames: ["wedding"]),
+        TestSong(title: "Slow only", canonicalLanguage: "gd", tagNames: ["Slow Air"]),
+        TestSong(title: "Neither", canonicalLanguage: "gd", tagNames: []),
+    ]
+
+    func testOneTagMatchesEverySongCarryingIt() {
+        var f = LibraryFilter()
+        f.tagNames = ["wedding"]
+        XCTAssertEqual(
+            Set(LibraryFiltering.apply(f, to: songs).map(\.title)),
+            ["Both", "Wedding only"]
+        )
+    }
+
+    /// The decision that matters: two tags narrows to songs carrying BOTH.
+    /// If this ever flips to "either", every other filter in the app would be
+    /// narrowing while this one widened.
+    func testTwoTagsRequireBoth() {
+        var f = LibraryFilter()
+        f.tagNames = ["wedding", "slow air"]
+        XCTAssertEqual(LibraryFiltering.apply(f, to: songs).map(\.title), ["Both"])
+    }
+
+    /// "Slow Air" and "slow air" are the same label.
+    func testTagMatchingIgnoresCaseAndAccents() {
+        var f = LibraryFilter()
+        f.tagNames = ["SLOW AIR"]
+        XCTAssertEqual(
+            Set(LibraryFiltering.apply(f, to: songs).map(\.title)),
+            ["Both", "Slow only"]
+        )
+    }
+
+    /// Tags combine with the built-in axes rather than replacing them —
+    /// "Gàidhlig songs tagged wedding" has to be askable.
+    func testTagsCombineWithLanguage() {
+        var f = LibraryFilter()
+        f.tagNames = ["wedding"]
+        f.language = "gd"
+        XCTAssertEqual(LibraryFiltering.apply(f, to: songs).map(\.title), ["Both"])
+    }
+
+    func testAskingForATagNobodyHasReturnsNothing() {
+        var f = LibraryFilter()
+        f.tagNames = ["nonexistent"]
+        XCTAssertTrue(LibraryFiltering.apply(f, to: songs).isEmpty)
+    }
+
+    func testSummaryNamesWhatIsBeingAskedFor() {
+        var f = LibraryFilter()
+        f.language = "gd"
+        f.tradition = "modern"
+        f.tagNames = ["wedding"]
+        XCTAssertEqual(f.summary, "Gàidhlig · Modern · wedding")
     }
 }
 

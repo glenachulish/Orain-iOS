@@ -64,6 +64,16 @@ public struct LibraryFilter: Equatable, Sendable {
     /// "3+ = performable" is how the mastery model actually reads.
     public var minRating: Int? = nil
 
+    /// User-created tags, matched by folded name. **All** of them must be
+    /// present — asking for "wedding" and "slow air" means songs that are
+    /// both, not songs that are either.
+    ///
+    /// AND rather than OR because that is what narrowing means everywhere
+    /// else in this filter, and a set of switches that sometimes widened and
+    /// sometimes narrowed would be impossible to predict. If "either" is ever
+    /// wanted, it should be an explicit choice, not a silent inconsistency.
+    public var tagNames: Set<String> = []
+
     public init() {}
 
     public var isActive: Bool {
@@ -73,7 +83,22 @@ public struct LibraryFilter: Equatable, Sendable {
           && language == nil
           && !favouritesOnly
           && !hitlistOnly
-          && minRating == nil)
+          && minRating == nil
+          && tagNames.isEmpty)
+    }
+
+    /// A short description of what is currently being asked for, for the
+    /// banner at the top of a filtered list.
+    public var summary: String {
+        var parts: [String] = []
+        if let language { parts.append(language == "gd" ? "Gàidhlig" : "Beurla") }
+        if let tradition { parts.append(tradition == "trad" ? "Traditional" : "Modern") }
+        if favouritesOnly { parts.append("favourites") }
+        if hitlistOnly { parts.append("hitlist") }
+        if let minRating { parts.append("rated \(minRating)+") }
+        if let composer { parts.append(composer) }
+        parts.append(contentsOf: tagNames.sorted())
+        return parts.joined(separator: " · ")
     }
 }
 
@@ -91,6 +116,13 @@ public protocol FilterableSong {
     var rating: Int? { get }
     /// Lyrics of all versions, for full-text search.
     var searchableText: String { get }
+    /// Names of the user-created tags on this song.
+    var tagNames: [String] { get }
+}
+
+extension FilterableSong {
+    /// Default so existing conformances keep working without tags.
+    public var tagNames: [String] { [] }
 }
 
 public enum LibraryFiltering {
@@ -115,6 +147,14 @@ public enum LibraryFiltering {
 
         if let minRating = filter.minRating {
             guard let rating = song.rating, rating >= minRating else { return false }
+        }
+
+        if !filter.tagNames.isEmpty {
+            // Folded comparison, so a filter saved as "Wedding" still matches
+            // a tag stored as "wedding".
+            let songTags = Set(song.tagNames.map(SongSorting.foldedTitle))
+            let wanted = Set(filter.tagNames.map(SongSorting.foldedTitle))
+            guard wanted.isSubset(of: songTags) else { return false }
         }
 
         if !filter.searchText.isEmpty {

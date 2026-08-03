@@ -98,6 +98,13 @@ struct VersionManagerView: View {
                 } label: {
                     Label("Rename", systemImage: "pencil")
                 }
+                Button {
+                    split(version)
+                } label: {
+                    Label("Make it its own song", systemImage: "arrow.triangle.branch")
+                }
+                .disabled(song.versions.count < 2)
+
                 Button(role: .destructive) {
                     deleting = version
                 } label: {
@@ -132,6 +139,80 @@ struct VersionManagerView: View {
             return "This is the default version. Another one will take its place."
         }
         return "This cannot be undone."
+    }
+
+    // MARK: Split
+
+    /// Lift a version out into a song of its own — the inverse of merging.
+    ///
+    /// For when two things were filed as one song and shouldn't have been: a
+    /// bulk import that folded two different songs together, or a version
+    /// added to the wrong song by mistake.
+    ///
+    /// The new song inherits the version's own title if it has one, otherwise
+    /// its label, otherwise the parent's title with a note that it was split.
+    /// Progress fields are copied rather than moved: the original song has
+    /// not become less learned by losing a version.
+    private func split(_ version: SongVersion) {
+        guard song.versions.count > 1 else { return }  // never leave a song empty
+
+        let title = version.versionTitle
+            ?? version.versionLabel
+            ?? song.title
+        let wasCanonical = version.isCanonical
+
+        let newSong = Song(
+            slug: uniqueSlug(from: title),
+            title: title,
+            composer: song.composer,
+            rating: song.rating,
+            isFavourite: song.isFavourite,
+            onHitlist: song.onHitlist,
+            notes: song.notes,
+            tradition: song.tradition
+        )
+        context.insert(newSong)
+
+        // Move the version across.
+        song.versions.removeAll { $0.persistentModelID == version.persistentModelID }
+        version.song = newSong
+        version.isCanonical = true
+        version.versionLabel = nil          // it is the whole song now, not a variant
+        version.versionTitle = nil
+        newSong.versions.append(version)
+
+        // Filing carries over — it was in those books as this material.
+        for collection in song.collections { collection.songs.append(newSong) }
+        for tag in song.tags { tag.songs.append(newSong) }
+
+        // The original keeps a canonical version.
+        if wasCanonical, let replacement = song.sortedVersions.first {
+            song.makeCanonical(replacement)
+        }
+        song.updatedAt = .now
+
+        try? context.save()
+    }
+
+    /// Slugs identify songs for re-import, so a split song needs one nothing
+    /// else is using.
+    private func uniqueSlug(from title: String) -> String {
+        let base = OrainCoreSortingBridge.fold(title)
+            .map { $0.isLetter || $0.isNumber ? $0 : "-" }
+            .reduce(into: "") { result, character in
+                if character == "-", result.last == "-" { return }
+                result.append(character)
+            }
+            .trimmingCharacters(in: CharacterSet(charactersIn: "-"))
+
+        let existing = (try? context.fetch(FetchDescriptor<Song>()))?.map(\.slug) ?? []
+        var candidate = base.isEmpty ? "song" : base
+        var suffix = 2
+        while existing.contains(candidate) {
+            candidate = "\(base)-\(suffix)"
+            suffix += 1
+        }
+        return candidate
     }
 
     // MARK: Delete
