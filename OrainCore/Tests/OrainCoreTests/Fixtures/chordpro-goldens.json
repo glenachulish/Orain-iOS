@@ -1,0 +1,1523 @@
+{
+  "_meta": {
+    "generated_from": "static/chord.js (Òrain Pi app), pure functions only",
+    "generated_by": "tools/generate_goldens.mjs",
+    "note": "Expected values are whatever the SHIPPED JavaScript does — including its quirks. The Swift port must match this, not an idealised spec."
+  },
+  "parseChordProLine": [
+    {
+      "input": "",
+      "expected": []
+    },
+    {
+      "input": " ",
+      "expected": [
+        {
+          "chord": null,
+          "text": " "
+        }
+      ]
+    },
+    {
+      "input": "Ailein duinn, hiù o-hoe",
+      "expected": [
+        {
+          "chord": null,
+          "text": "Ailein duinn, hiù o-hoe"
+        }
+      ]
+    },
+    {
+      "input": "[G]Ailein duinn, [D]hiù o-hoe, [C]hiù o-ho ro [G]eile",
+      "expected": [
+        {
+          "chord": "G",
+          "text": "Ailein duinn, "
+        },
+        {
+          "chord": "D",
+          "text": "hiù o-hoe, "
+        },
+        {
+          "chord": "C",
+          "text": "hiù o-ho ro "
+        },
+        {
+          "chord": "G",
+          "text": "eile"
+        }
+      ]
+    },
+    {
+      "input": "[G]Ailein duinn",
+      "expected": [
+        {
+          "chord": "G",
+          "text": "Ailein duinn"
+        }
+      ]
+    },
+    {
+      "input": "Ailein [G]duinn",
+      "expected": [
+        {
+          "chord": null,
+          "text": "Ailein "
+        },
+        {
+          "chord": "G",
+          "text": "duinn"
+        }
+      ]
+    },
+    {
+      "input": "[G][D]Ailein duinn",
+      "expected": [
+        {
+          "chord": "G",
+          "text": ""
+        },
+        {
+          "chord": "D",
+          "text": "Ailein duinn"
+        }
+      ]
+    },
+    {
+      "input": "[G] [D] Ailein",
+      "expected": [
+        {
+          "chord": "G",
+          "text": " "
+        },
+        {
+          "chord": "D",
+          "text": " Ailein"
+        }
+      ]
+    },
+    {
+      "input": "[Am7]Gura [F#m]mise tha fo [Csus4]éislean",
+      "expected": [
+        {
+          "chord": "Am7",
+          "text": "Gura "
+        },
+        {
+          "chord": "F#m",
+          "text": "mise tha fo "
+        },
+        {
+          "chord": "Csus4",
+          "text": "éislean"
+        }
+      ]
+    },
+    {
+      "input": "trailing chord at end[G]",
+      "expected": [
+        {
+          "chord": null,
+          "text": "trailing chord at end"
+        },
+        {
+          "chord": "G",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "input": "[G]",
+      "expected": [
+        {
+          "chord": "G",
+          "text": ""
+        }
+      ]
+    },
+    {
+      "input": "no brackets at all",
+      "expected": [
+        {
+          "chord": null,
+          "text": "no brackets at all"
+        }
+      ]
+    },
+    {
+      "input": "unclosed [bracket",
+      "expected": [
+        {
+          "chord": null,
+          "text": "unclosed [bracket"
+        }
+      ]
+    },
+    {
+      "input": "empty []brackets",
+      "expected": [
+        {
+          "chord": null,
+          "text": "empty []brackets"
+        }
+      ]
+    },
+    {
+      "input": "[G]a[D]b[C]c",
+      "expected": [
+        {
+          "chord": "G",
+          "text": "a"
+        },
+        {
+          "chord": "D",
+          "text": "b"
+        },
+        {
+          "chord": "C",
+          "text": "c"
+        }
+      ]
+    },
+    {
+      "input": "  leading spaces kept",
+      "expected": [
+        {
+          "chord": null,
+          "text": "  leading spaces kept"
+        }
+      ]
+    },
+    {
+      "input": "Ò mo dhùthaich, 's tu th'air m'aire",
+      "expected": [
+        {
+          "chord": null,
+          "text": "Ò mo dhùthaich, 's tu th'air m'aire"
+        }
+      ]
+    },
+    {
+      "input": "[D]Ò mo [G]dhùthaich, 's tu th'air m'[A7]aire",
+      "expected": [
+        {
+          "chord": "D",
+          "text": "Ò mo "
+        },
+        {
+          "chord": "G",
+          "text": "dhùthaich, 's tu th'air m'"
+        },
+        {
+          "chord": "A7",
+          "text": "aire"
+        }
+      ]
+    },
+    {
+      "input": "double  spaces  between  words",
+      "expected": [
+        {
+          "chord": null,
+          "text": "double  spaces  between  words"
+        }
+      ]
+    },
+    {
+      "input": "[G]word [D]  two spaces after chord",
+      "expected": [
+        {
+          "chord": "G",
+          "text": "word "
+        },
+        {
+          "chord": "D",
+          "text": "  two spaces after chord"
+        }
+      ]
+    }
+  ],
+  "parseDirectiveLine": [
+    {
+      "input": "{start_of_chorus}",
+      "expected": {
+        "kind": "chorus",
+        "boundary": "start",
+        "label": null
+      }
+    },
+    {
+      "input": "{end_of_chorus}",
+      "expected": {
+        "kind": "chorus",
+        "boundary": "end",
+        "label": null
+      }
+    },
+    {
+      "input": "{soc}",
+      "expected": {
+        "kind": "chorus",
+        "boundary": "start",
+        "label": null
+      }
+    },
+    {
+      "input": "{eoc}",
+      "expected": {
+        "kind": "chorus",
+        "boundary": "end",
+        "label": null
+      }
+    },
+    {
+      "input": "{sov}",
+      "expected": {
+        "kind": "verse",
+        "boundary": "start",
+        "label": null
+      }
+    },
+    {
+      "input": "{eov}",
+      "expected": {
+        "kind": "verse",
+        "boundary": "end",
+        "label": null
+      }
+    },
+    {
+      "input": "{sob}",
+      "expected": {
+        "kind": "bridge",
+        "boundary": "start",
+        "label": null
+      }
+    },
+    {
+      "input": "{eob}",
+      "expected": {
+        "kind": "bridge",
+        "boundary": "end",
+        "label": null
+      }
+    },
+    {
+      "input": "{start_of_verse: Verse 2}",
+      "expected": {
+        "kind": "verse",
+        "boundary": "start",
+        "label": "Verse 2"
+      }
+    },
+    {
+      "input": "{start_of_chorus: Sèist}",
+      "expected": {
+        "kind": "chorus",
+        "boundary": "start",
+        "label": "Sèist"
+      }
+    },
+    {
+      "input": "{START_OF_CHORUS}",
+      "expected": {
+        "kind": "chorus",
+        "boundary": "start",
+        "label": null
+      }
+    },
+    {
+      "input": "  {start_of_verse}  ",
+      "expected": {
+        "kind": "verse",
+        "boundary": "start",
+        "label": null
+      }
+    },
+    {
+      "input": "{start_of_verse:}",
+      "expected": {
+        "kind": "verse",
+        "boundary": "start",
+        "label": null
+      }
+    },
+    {
+      "input": "{start_of_verse:   }",
+      "expected": {
+        "kind": "verse",
+        "boundary": "start",
+        "label": ""
+      }
+    },
+    {
+      "input": "{title: Ailein Duinn}",
+      "expected": null
+    },
+    {
+      "input": "{not_a_directive}",
+      "expected": null
+    },
+    {
+      "input": "{}",
+      "expected": null
+    },
+    {
+      "input": "not a directive at all",
+      "expected": null
+    },
+    {
+      "input": "{start_of_chorus} trailing text",
+      "expected": null
+    },
+    {
+      "input": "[G]{soc}",
+      "expected": null
+    }
+  ],
+  "buildDirectiveLine": [
+    {
+      "kind": "chorus",
+      "boundary": "start",
+      "label": null,
+      "expected": "{start_of_chorus}"
+    },
+    {
+      "kind": "chorus",
+      "boundary": "end",
+      "label": null,
+      "expected": "{end_of_chorus}"
+    },
+    {
+      "kind": "verse",
+      "boundary": "start",
+      "label": "Verse 2",
+      "expected": "{start_of_verse: Verse 2}"
+    },
+    {
+      "kind": "verse",
+      "boundary": "start",
+      "label": "",
+      "expected": "{start_of_verse}"
+    },
+    {
+      "kind": "verse",
+      "boundary": "start",
+      "label": "   ",
+      "expected": "{start_of_verse}"
+    },
+    {
+      "kind": "bridge",
+      "boundary": "start",
+      "label": "  Bridge A  ",
+      "expected": "{start_of_bridge: Bridge A}"
+    },
+    {
+      "kind": "bridge",
+      "boundary": "end",
+      "label": "ignored?",
+      "expected": "{end_of_bridge: ignored?}"
+    }
+  ],
+  "getSections": [
+    {
+      "input": "",
+      "expected": []
+    },
+    {
+      "input": "single line no chords",
+      "expected": [
+        {
+          "kind": "plain",
+          "label": null,
+          "lines": [
+            "single line no chords"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "line one\nline two",
+      "expected": [
+        {
+          "kind": "plain",
+          "label": null,
+          "lines": [
+            "line one",
+            "line two"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "line one\n\nline three",
+      "expected": [
+        {
+          "kind": "plain",
+          "label": null,
+          "lines": [
+            "line one",
+            "",
+            "line three"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "[G]Ailein duinn, [D]hiù o-hoe\n[C]hiù o-ho ro [G]eile",
+      "expected": [
+        {
+          "kind": "plain",
+          "label": null,
+          "lines": [
+            "[G]Ailein duinn, [D]hiù o-hoe",
+            "[C]hiù o-ho ro [G]eile"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "Verse words here\n{start_of_chorus}\nSèist words\n{end_of_chorus}",
+      "expected": [
+        {
+          "kind": "plain",
+          "label": null,
+          "lines": [
+            "Verse words here"
+          ]
+        },
+        {
+          "kind": "chorus",
+          "label": null,
+          "lines": [
+            "Sèist words"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "{start_of_verse: Verse 1}\nFirst verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}",
+      "expected": [
+        {
+          "kind": "verse",
+          "label": "Verse 1",
+          "lines": [
+            "First verse"
+          ]
+        },
+        {
+          "kind": "chorus",
+          "label": "Sèist",
+          "lines": [
+            "Chorus words"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "{start_of_verse: Verse 1}\nFirst verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}\n{start_of_verse: Verse 2}\nSecond verse\n{end_of_verse}",
+      "expected": [
+        {
+          "kind": "verse",
+          "label": "Verse 1",
+          "lines": [
+            "First verse"
+          ]
+        },
+        {
+          "kind": "chorus",
+          "label": "Sèist",
+          "lines": [
+            "Chorus words"
+          ]
+        },
+        {
+          "kind": "verse",
+          "label": "Verse 2",
+          "lines": [
+            "Second verse"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "{start_of_verse}\nOnly a verse\n{end_of_verse}",
+      "expected": [
+        {
+          "kind": "verse",
+          "label": null,
+          "lines": [
+            "Only a verse"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "{start_of_chorus}\nChorus first\n{end_of_chorus}\n{start_of_verse}\nVerse after\n{end_of_verse}\n{start_of_verse}\nAnother verse\n{end_of_verse}",
+      "expected": [
+        {
+          "kind": "chorus",
+          "label": null,
+          "lines": [
+            "Chorus first"
+          ]
+        },
+        {
+          "kind": "verse",
+          "label": null,
+          "lines": [
+            "Verse after"
+          ]
+        },
+        {
+          "kind": "verse",
+          "label": null,
+          "lines": [
+            "Another verse"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "{start_of_chorus: A}\nChorus A\n{end_of_chorus}\n{start_of_verse}\nV\n{end_of_verse}\n{start_of_chorus: B}\nChorus B\n{end_of_chorus}",
+      "expected": [
+        {
+          "kind": "chorus",
+          "label": "A",
+          "lines": [
+            "Chorus A"
+          ]
+        },
+        {
+          "kind": "verse",
+          "label": null,
+          "lines": [
+            "V"
+          ]
+        },
+        {
+          "kind": "chorus",
+          "label": "B",
+          "lines": [
+            "Chorus B"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "{start_of_chorus}\nNever closed",
+      "expected": [
+        {
+          "kind": "chorus",
+          "label": null,
+          "lines": [
+            "Never closed"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "{start_of_chorus}\n{end_of_chorus}",
+      "expected": [
+        {
+          "kind": "chorus",
+          "label": null,
+          "lines": []
+        }
+      ]
+    },
+    {
+      "input": "{start_of_verse}\nV\n{end_of_verse}\n{start_of_bridge: Middle}\nBridge line\n{end_of_bridge}\n{start_of_chorus}\nC\n{end_of_chorus}",
+      "expected": [
+        {
+          "kind": "verse",
+          "label": null,
+          "lines": [
+            "V"
+          ]
+        },
+        {
+          "kind": "bridge",
+          "label": "Middle",
+          "lines": [
+            "Bridge line"
+          ]
+        },
+        {
+          "kind": "chorus",
+          "label": null,
+          "lines": [
+            "C"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "{start_of_chorus: Sèist}\n[G]Ailein [D]duinn\n{end_of_chorus}\n{start_of_verse}\n[C]Verse [G]line\n{end_of_verse}",
+      "expected": [
+        {
+          "kind": "chorus",
+          "label": "Sèist",
+          "lines": [
+            "[G]Ailein [D]duinn"
+          ]
+        },
+        {
+          "kind": "verse",
+          "label": null,
+          "lines": [
+            "[C]Verse [G]line"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "Ò mo dhùthaich, 's tu th'air m'aire\nÙidh nan eilean, gorm mo shùilean\n\nCòrdadh rium do bheanntan àrda",
+      "expected": [
+        {
+          "kind": "plain",
+          "label": null,
+          "lines": [
+            "Ò mo dhùthaich, 's tu th'air m'aire",
+            "Ùidh nan eilean, gorm mo shùilean",
+            "",
+            "Còrdadh rium do bheanntan àrda"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "line\n",
+      "expected": [
+        {
+          "kind": "plain",
+          "label": null,
+          "lines": [
+            "line",
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "input": "\nline",
+      "expected": [
+        {
+          "kind": "plain",
+          "label": null,
+          "lines": [
+            "",
+            "line"
+          ]
+        }
+      ]
+    },
+    {
+      "input": "\n\n",
+      "expected": [
+        {
+          "kind": "plain",
+          "label": null,
+          "lines": [
+            "",
+            "",
+            ""
+          ]
+        }
+      ]
+    }
+  ],
+  "hasChorus": [
+    {
+      "input": "",
+      "expected": false
+    },
+    {
+      "input": "single line no chords",
+      "expected": false
+    },
+    {
+      "input": "line one\nline two",
+      "expected": false
+    },
+    {
+      "input": "line one\n\nline three",
+      "expected": false
+    },
+    {
+      "input": "[G]Ailein duinn, [D]hiù o-hoe\n[C]hiù o-ho ro [G]eile",
+      "expected": false
+    },
+    {
+      "input": "Verse words here\n{start_of_chorus}\nSèist words\n{end_of_chorus}",
+      "expected": true
+    },
+    {
+      "input": "{start_of_verse: Verse 1}\nFirst verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}",
+      "expected": true
+    },
+    {
+      "input": "{start_of_verse: Verse 1}\nFirst verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}\n{start_of_verse: Verse 2}\nSecond verse\n{end_of_verse}",
+      "expected": true
+    },
+    {
+      "input": "{start_of_verse}\nOnly a verse\n{end_of_verse}",
+      "expected": false
+    },
+    {
+      "input": "{start_of_chorus}\nChorus first\n{end_of_chorus}\n{start_of_verse}\nVerse after\n{end_of_verse}\n{start_of_verse}\nAnother verse\n{end_of_verse}",
+      "expected": true
+    },
+    {
+      "input": "{start_of_chorus: A}\nChorus A\n{end_of_chorus}\n{start_of_verse}\nV\n{end_of_verse}\n{start_of_chorus: B}\nChorus B\n{end_of_chorus}",
+      "expected": true
+    },
+    {
+      "input": "{start_of_chorus}\nNever closed",
+      "expected": true
+    },
+    {
+      "input": "{start_of_chorus}\n{end_of_chorus}",
+      "expected": true
+    },
+    {
+      "input": "{start_of_verse}\nV\n{end_of_verse}\n{start_of_bridge: Middle}\nBridge line\n{end_of_bridge}\n{start_of_chorus}\nC\n{end_of_chorus}",
+      "expected": true
+    },
+    {
+      "input": "{start_of_chorus: Sèist}\n[G]Ailein [D]duinn\n{end_of_chorus}\n{start_of_verse}\n[C]Verse [G]line\n{end_of_verse}",
+      "expected": true
+    },
+    {
+      "input": "Ò mo dhùthaich, 's tu th'air m'aire\nÙidh nan eilean, gorm mo shùilean\n\nCòrdadh rium do bheanntan àrda",
+      "expected": false
+    },
+    {
+      "input": "line\n",
+      "expected": false
+    },
+    {
+      "input": "\nline",
+      "expected": false
+    },
+    {
+      "input": "\n\n",
+      "expected": false
+    }
+  ],
+  "repeatChorus": [
+    {
+      "input": "",
+      "expected": ""
+    },
+    {
+      "input": "single line no chords",
+      "expected": "single line no chords"
+    },
+    {
+      "input": "line one\nline two",
+      "expected": "line one\nline two"
+    },
+    {
+      "input": "line one\n\nline three",
+      "expected": "line one\n\nline three"
+    },
+    {
+      "input": "[G]Ailein duinn, [D]hiù o-hoe\n[C]hiù o-ho ro [G]eile",
+      "expected": "[G]Ailein duinn, [D]hiù o-hoe\n[C]hiù o-ho ro [G]eile"
+    },
+    {
+      "input": "Verse words here\n{start_of_chorus}\nSèist words\n{end_of_chorus}",
+      "expected": "Verse words here\n{start_of_chorus}\nSèist words\n{end_of_chorus}"
+    },
+    {
+      "input": "{start_of_verse: Verse 1}\nFirst verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}",
+      "expected": "{start_of_verse: Verse 1}\nFirst verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}"
+    },
+    {
+      "input": "{start_of_verse: Verse 1}\nFirst verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}\n{start_of_verse: Verse 2}\nSecond verse\n{end_of_verse}",
+      "expected": "{start_of_verse: Verse 1}\nFirst verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}\n{start_of_verse: Verse 2}\nSecond verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}"
+    },
+    {
+      "input": "{start_of_verse}\nOnly a verse\n{end_of_verse}",
+      "expected": "{start_of_verse}\nOnly a verse\n{end_of_verse}"
+    },
+    {
+      "input": "{start_of_chorus}\nChorus first\n{end_of_chorus}\n{start_of_verse}\nVerse after\n{end_of_verse}\n{start_of_verse}\nAnother verse\n{end_of_verse}",
+      "expected": "{start_of_chorus}\nChorus first\n{end_of_chorus}\n{start_of_verse}\nVerse after\n{end_of_verse}\n{start_of_chorus}\nChorus first\n{end_of_chorus}\n{start_of_verse}\nAnother verse\n{end_of_verse}\n{start_of_chorus}\nChorus first\n{end_of_chorus}"
+    },
+    {
+      "input": "{start_of_chorus: A}\nChorus A\n{end_of_chorus}\n{start_of_verse}\nV\n{end_of_verse}\n{start_of_chorus: B}\nChorus B\n{end_of_chorus}",
+      "expected": "{start_of_chorus: A}\nChorus A\n{end_of_chorus}\n{start_of_verse}\nV\n{end_of_verse}\n{start_of_chorus: B}\nChorus B\n{end_of_chorus}"
+    },
+    {
+      "input": "{start_of_chorus}\nNever closed",
+      "expected": "{start_of_chorus}\nNever closed\n{end_of_chorus}"
+    },
+    {
+      "input": "{start_of_chorus}\n{end_of_chorus}",
+      "expected": "{start_of_chorus}\n{end_of_chorus}"
+    },
+    {
+      "input": "{start_of_verse}\nV\n{end_of_verse}\n{start_of_bridge: Middle}\nBridge line\n{end_of_bridge}\n{start_of_chorus}\nC\n{end_of_chorus}",
+      "expected": "{start_of_verse}\nV\n{end_of_verse}\n{start_of_chorus}\nC\n{end_of_chorus}\n{start_of_bridge: Middle}\nBridge line\n{end_of_bridge}\n{start_of_chorus}\nC\n{end_of_chorus}"
+    },
+    {
+      "input": "{start_of_chorus: Sèist}\n[G]Ailein [D]duinn\n{end_of_chorus}\n{start_of_verse}\n[C]Verse [G]line\n{end_of_verse}",
+      "expected": "{start_of_chorus: Sèist}\n[G]Ailein [D]duinn\n{end_of_chorus}\n{start_of_verse}\n[C]Verse [G]line\n{end_of_verse}\n{start_of_chorus: Sèist}\n[G]Ailein [D]duinn\n{end_of_chorus}"
+    },
+    {
+      "input": "Ò mo dhùthaich, 's tu th'air m'aire\nÙidh nan eilean, gorm mo shùilean\n\nCòrdadh rium do bheanntan àrda",
+      "expected": "Ò mo dhùthaich, 's tu th'air m'aire\nÙidh nan eilean, gorm mo shùilean\n\nCòrdadh rium do bheanntan àrda"
+    },
+    {
+      "input": "line\n",
+      "expected": "line\n"
+    },
+    {
+      "input": "\nline",
+      "expected": "\nline"
+    },
+    {
+      "input": "\n\n",
+      "expected": "\n\n"
+    }
+  ],
+  "lyricsToEditor": [
+    {
+      "input": "",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": ""
+        }
+      ]
+    },
+    {
+      "input": "single line no chords",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "single line no chords"
+        }
+      ]
+    },
+    {
+      "input": "line one\nline two",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "line one"
+        },
+        {
+          "chords": "",
+          "lyric": "line two"
+        }
+      ]
+    },
+    {
+      "input": "line one\n\nline three",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "line one"
+        },
+        {
+          "chords": "",
+          "lyric": ""
+        },
+        {
+          "chords": "",
+          "lyric": "line three"
+        }
+      ]
+    },
+    {
+      "input": "[G]Ailein duinn, [D]hiù o-hoe\n[C]hiù o-ho ro [G]eile",
+      "expected": [
+        {
+          "chords": "G             D",
+          "lyric": "Ailein duinn, hiù o-hoe"
+        },
+        {
+          "chords": "C           G",
+          "lyric": "hiù o-ho ro eile"
+        }
+      ]
+    },
+    {
+      "input": "Verse words here\n{start_of_chorus}\nSèist words\n{end_of_chorus}",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "Verse words here"
+        },
+        {
+          "chords": "",
+          "lyric": "{start_of_chorus}"
+        },
+        {
+          "chords": "",
+          "lyric": "Sèist words"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_chorus}"
+        }
+      ]
+    },
+    {
+      "input": "{start_of_verse: Verse 1}\nFirst verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "{start_of_verse: Verse 1}"
+        },
+        {
+          "chords": "",
+          "lyric": "First verse"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_verse}"
+        },
+        {
+          "chords": "",
+          "lyric": "{start_of_chorus: Sèist}"
+        },
+        {
+          "chords": "",
+          "lyric": "Chorus words"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_chorus}"
+        }
+      ]
+    },
+    {
+      "input": "{start_of_verse: Verse 1}\nFirst verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}\n{start_of_verse: Verse 2}\nSecond verse\n{end_of_verse}",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "{start_of_verse: Verse 1}"
+        },
+        {
+          "chords": "",
+          "lyric": "First verse"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_verse}"
+        },
+        {
+          "chords": "",
+          "lyric": "{start_of_chorus: Sèist}"
+        },
+        {
+          "chords": "",
+          "lyric": "Chorus words"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_chorus}"
+        },
+        {
+          "chords": "",
+          "lyric": "{start_of_verse: Verse 2}"
+        },
+        {
+          "chords": "",
+          "lyric": "Second verse"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_verse}"
+        }
+      ]
+    },
+    {
+      "input": "{start_of_verse}\nOnly a verse\n{end_of_verse}",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "{start_of_verse}"
+        },
+        {
+          "chords": "",
+          "lyric": "Only a verse"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_verse}"
+        }
+      ]
+    },
+    {
+      "input": "{start_of_chorus}\nChorus first\n{end_of_chorus}\n{start_of_verse}\nVerse after\n{end_of_verse}\n{start_of_verse}\nAnother verse\n{end_of_verse}",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "{start_of_chorus}"
+        },
+        {
+          "chords": "",
+          "lyric": "Chorus first"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_chorus}"
+        },
+        {
+          "chords": "",
+          "lyric": "{start_of_verse}"
+        },
+        {
+          "chords": "",
+          "lyric": "Verse after"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_verse}"
+        },
+        {
+          "chords": "",
+          "lyric": "{start_of_verse}"
+        },
+        {
+          "chords": "",
+          "lyric": "Another verse"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_verse}"
+        }
+      ]
+    },
+    {
+      "input": "{start_of_chorus: A}\nChorus A\n{end_of_chorus}\n{start_of_verse}\nV\n{end_of_verse}\n{start_of_chorus: B}\nChorus B\n{end_of_chorus}",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "{start_of_chorus: A}"
+        },
+        {
+          "chords": "",
+          "lyric": "Chorus A"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_chorus}"
+        },
+        {
+          "chords": "",
+          "lyric": "{start_of_verse}"
+        },
+        {
+          "chords": "",
+          "lyric": "V"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_verse}"
+        },
+        {
+          "chords": "",
+          "lyric": "{start_of_chorus: B}"
+        },
+        {
+          "chords": "",
+          "lyric": "Chorus B"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_chorus}"
+        }
+      ]
+    },
+    {
+      "input": "{start_of_chorus}\nNever closed",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "{start_of_chorus}"
+        },
+        {
+          "chords": "",
+          "lyric": "Never closed"
+        }
+      ]
+    },
+    {
+      "input": "{start_of_chorus}\n{end_of_chorus}",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "{start_of_chorus}"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_chorus}"
+        }
+      ]
+    },
+    {
+      "input": "{start_of_verse}\nV\n{end_of_verse}\n{start_of_bridge: Middle}\nBridge line\n{end_of_bridge}\n{start_of_chorus}\nC\n{end_of_chorus}",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "{start_of_verse}"
+        },
+        {
+          "chords": "",
+          "lyric": "V"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_verse}"
+        },
+        {
+          "chords": "",
+          "lyric": "{start_of_bridge: Middle}"
+        },
+        {
+          "chords": "",
+          "lyric": "Bridge line"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_bridge}"
+        },
+        {
+          "chords": "",
+          "lyric": "{start_of_chorus}"
+        },
+        {
+          "chords": "",
+          "lyric": "C"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_chorus}"
+        }
+      ]
+    },
+    {
+      "input": "{start_of_chorus: Sèist}\n[G]Ailein [D]duinn\n{end_of_chorus}\n{start_of_verse}\n[C]Verse [G]line\n{end_of_verse}",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "{start_of_chorus: Sèist}"
+        },
+        {
+          "chords": "G      D",
+          "lyric": "Ailein duinn"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_chorus}"
+        },
+        {
+          "chords": "",
+          "lyric": "{start_of_verse}"
+        },
+        {
+          "chords": "C     G",
+          "lyric": "Verse line"
+        },
+        {
+          "chords": "",
+          "lyric": "{end_of_verse}"
+        }
+      ]
+    },
+    {
+      "input": "Ò mo dhùthaich, 's tu th'air m'aire\nÙidh nan eilean, gorm mo shùilean\n\nCòrdadh rium do bheanntan àrda",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "Ò mo dhùthaich, 's tu th'air m'aire"
+        },
+        {
+          "chords": "",
+          "lyric": "Ùidh nan eilean, gorm mo shùilean"
+        },
+        {
+          "chords": "",
+          "lyric": ""
+        },
+        {
+          "chords": "",
+          "lyric": "Còrdadh rium do bheanntan àrda"
+        }
+      ]
+    },
+    {
+      "input": "line\n",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": "line"
+        },
+        {
+          "chords": "",
+          "lyric": ""
+        }
+      ]
+    },
+    {
+      "input": "\nline",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": ""
+        },
+        {
+          "chords": "",
+          "lyric": "line"
+        }
+      ]
+    },
+    {
+      "input": "\n\n",
+      "expected": [
+        {
+          "chords": "",
+          "lyric": ""
+        },
+        {
+          "chords": "",
+          "lyric": ""
+        },
+        {
+          "chords": "",
+          "lyric": ""
+        }
+      ]
+    }
+  ],
+  "editorToLyrics": [
+    {
+      "input": [
+        {
+          "chords": "",
+          "lyric": ""
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "input": [
+        {
+          "chords": "",
+          "lyric": "plain lyric"
+        }
+      ],
+      "expected": "plain lyric"
+    },
+    {
+      "input": [
+        {
+          "chords": "G",
+          "lyric": "Ailein duinn"
+        }
+      ],
+      "expected": "[G]Ailein duinn"
+    },
+    {
+      "input": [
+        {
+          "chords": "G    D",
+          "lyric": "Ailein duinn"
+        }
+      ],
+      "expected": "[G]Ailei[D]n duinn"
+    },
+    {
+      "input": [
+        {
+          "chords": "G   D",
+          "lyric": "Ail"
+        }
+      ],
+      "expected": "[G]Ail[D]"
+    },
+    {
+      "input": [
+        {
+          "chords": "  G",
+          "lyric": "Ailein"
+        }
+      ],
+      "expected": "Ai[G]lein"
+    },
+    {
+      "input": [
+        {
+          "chords": "G",
+          "lyric": ""
+        }
+      ],
+      "expected": "[G]"
+    },
+    {
+      "input": [
+        {
+          "chords": "GD",
+          "lyric": "Ailein"
+        }
+      ],
+      "expected": "[GD]Ailein"
+    },
+    {
+      "input": [
+        {
+          "chords": "Am7  F#m",
+          "lyric": "Gura mise"
+        }
+      ],
+      "expected": "[Am7]Gura [F#m]mise"
+    },
+    {
+      "input": [
+        {
+          "chords": "",
+          "lyric": "{start_of_chorus}"
+        }
+      ],
+      "expected": "{start_of_chorus}"
+    },
+    {
+      "input": [
+        {
+          "chords": "IGNORED",
+          "lyric": "{start_of_chorus}"
+        }
+      ],
+      "expected": "{start_of_chorus}"
+    },
+    {
+      "input": [
+        {
+          "chords": "G",
+          "lyric": "line one"
+        },
+        {
+          "chords": "",
+          "lyric": ""
+        },
+        {
+          "chords": "D",
+          "lyric": "line two"
+        }
+      ],
+      "expected": "[G]line one\n\n[D]line two"
+    },
+    {
+      "input": [
+        {
+          "chords": "   ",
+          "lyric": "whitespace-only chord row"
+        }
+      ],
+      "expected": "whitespace-only chord row"
+    }
+  ],
+  "roundTrip": [
+    {
+      "input": "",
+      "expected": "",
+      "lossless": true
+    },
+    {
+      "input": "single line no chords",
+      "expected": "single line no chords",
+      "lossless": true
+    },
+    {
+      "input": "line one\nline two",
+      "expected": "line one\nline two",
+      "lossless": true
+    },
+    {
+      "input": "line one\n\nline three",
+      "expected": "line one\n\nline three",
+      "lossless": true
+    },
+    {
+      "input": "[G]Ailein duinn, [D]hiù o-hoe\n[C]hiù o-ho ro [G]eile",
+      "expected": "[G]Ailein duinn, [D]hiù o-hoe\n[C]hiù o-ho ro [G]eile",
+      "lossless": true
+    },
+    {
+      "input": "Verse words here\n{start_of_chorus}\nSèist words\n{end_of_chorus}",
+      "expected": "Verse words here\n{start_of_chorus}\nSèist words\n{end_of_chorus}",
+      "lossless": true
+    },
+    {
+      "input": "{start_of_verse: Verse 1}\nFirst verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}",
+      "expected": "{start_of_verse: Verse 1}\nFirst verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}",
+      "lossless": true
+    },
+    {
+      "input": "{start_of_verse: Verse 1}\nFirst verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}\n{start_of_verse: Verse 2}\nSecond verse\n{end_of_verse}",
+      "expected": "{start_of_verse: Verse 1}\nFirst verse\n{end_of_verse}\n{start_of_chorus: Sèist}\nChorus words\n{end_of_chorus}\n{start_of_verse: Verse 2}\nSecond verse\n{end_of_verse}",
+      "lossless": true
+    },
+    {
+      "input": "{start_of_verse}\nOnly a verse\n{end_of_verse}",
+      "expected": "{start_of_verse}\nOnly a verse\n{end_of_verse}",
+      "lossless": true
+    },
+    {
+      "input": "{start_of_chorus}\nChorus first\n{end_of_chorus}\n{start_of_verse}\nVerse after\n{end_of_verse}\n{start_of_verse}\nAnother verse\n{end_of_verse}",
+      "expected": "{start_of_chorus}\nChorus first\n{end_of_chorus}\n{start_of_verse}\nVerse after\n{end_of_verse}\n{start_of_verse}\nAnother verse\n{end_of_verse}",
+      "lossless": true
+    },
+    {
+      "input": "{start_of_chorus: A}\nChorus A\n{end_of_chorus}\n{start_of_verse}\nV\n{end_of_verse}\n{start_of_chorus: B}\nChorus B\n{end_of_chorus}",
+      "expected": "{start_of_chorus: A}\nChorus A\n{end_of_chorus}\n{start_of_verse}\nV\n{end_of_verse}\n{start_of_chorus: B}\nChorus B\n{end_of_chorus}",
+      "lossless": true
+    },
+    {
+      "input": "{start_of_chorus}\nNever closed",
+      "expected": "{start_of_chorus}\nNever closed",
+      "lossless": true
+    },
+    {
+      "input": "{start_of_chorus}\n{end_of_chorus}",
+      "expected": "{start_of_chorus}\n{end_of_chorus}",
+      "lossless": true
+    },
+    {
+      "input": "{start_of_verse}\nV\n{end_of_verse}\n{start_of_bridge: Middle}\nBridge line\n{end_of_bridge}\n{start_of_chorus}\nC\n{end_of_chorus}",
+      "expected": "{start_of_verse}\nV\n{end_of_verse}\n{start_of_bridge: Middle}\nBridge line\n{end_of_bridge}\n{start_of_chorus}\nC\n{end_of_chorus}",
+      "lossless": true
+    },
+    {
+      "input": "{start_of_chorus: Sèist}\n[G]Ailein [D]duinn\n{end_of_chorus}\n{start_of_verse}\n[C]Verse [G]line\n{end_of_verse}",
+      "expected": "{start_of_chorus: Sèist}\n[G]Ailein [D]duinn\n{end_of_chorus}\n{start_of_verse}\n[C]Verse [G]line\n{end_of_verse}",
+      "lossless": true
+    },
+    {
+      "input": "Ò mo dhùthaich, 's tu th'air m'aire\nÙidh nan eilean, gorm mo shùilean\n\nCòrdadh rium do bheanntan àrda",
+      "expected": "Ò mo dhùthaich, 's tu th'air m'aire\nÙidh nan eilean, gorm mo shùilean\n\nCòrdadh rium do bheanntan àrda",
+      "lossless": true
+    },
+    {
+      "input": "line\n",
+      "expected": "line\n",
+      "lossless": true
+    },
+    {
+      "input": "\nline",
+      "expected": "\nline",
+      "lossless": true
+    },
+    {
+      "input": "\n\n",
+      "expected": "\n\n",
+      "lossless": true
+    }
+  ]
+}
